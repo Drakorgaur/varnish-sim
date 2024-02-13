@@ -42,6 +42,16 @@ type OneLayer struct {
 	config LayerConfig
 }
 
+func (o *OneLayer) Step() error {
+	var err error
+
+	for _, proxy := range o.proxies {
+		err = WriteStep(proxy)
+	}
+
+	return err
+}
+
 func (o *OneLayer) PrintResultsCB(isJson bool) func() error {
 	if isJson {
 		return func() error {

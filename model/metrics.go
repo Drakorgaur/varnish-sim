@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 // CacheMetric is a struct for cache hit/miss metrics
 type CacheMetric struct {
 	hit  int
@@ -16,14 +18,31 @@ func (m *CacheMetric) Miss() {
 	m.miss++
 }
 
-// ExportType returns a map of cache hit/miss for exporting
-// 	as these fields are private
-func (m *CacheMetric) ExportType() map[string]float64 {
+func (m *CacheMetric) CHR() float64 {
 	total := m.hit + m.miss
 	if total == 0 {
-		total = 1
+		return 0
 	}
-	return map[string]float64{"hit": float64(m.hit), "miss": float64(m.miss), "total": float64(total), "hit_ratio": float64(m.hit) / float64(total)}
+	return float64(m.hit) / float64(total)
+}
+
+func (m *CacheMetric) StepHeader() string {
+	return "hit miss"
+}
+
+func (m *CacheMetric) Step() string {
+	return fmt.Sprintf("%d %d", m.hit, m.miss)
+}
+
+func (m *CacheMetric) Total() int {
+	return m.hit + m.miss
+}
+
+// ExportType returns a map of cache hit/miss for exporting
+//
+//	as these fields are private
+func (m *CacheMetric) ExportType() map[string]float64 {
+	return map[string]float64{"hit": float64(m.hit), "miss": float64(m.miss), "total": float64(m.Total()), "hit_ratio": m.CHR()}
 }
 
 // RoutingMetric is a map showing traffic info that was routed to each backend

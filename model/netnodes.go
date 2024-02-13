@@ -62,6 +62,18 @@ func (v *VarnishProxy) TableData() (name string, rows [][]string) {
 	return
 }
 
+func (v *VarnishProxy) Hostname() string {
+	return v.hostname
+}
+
+func (v *VarnishProxy) StepHeader() string {
+	return v.cacheMetric.StepHeader()
+}
+
+func (v *VarnishProxy) Step() string {
+	return v.cacheMetric.Step()
+}
+
 func (v *VarnishProxy) Export() map[string]interface{} {
 	self := make(map[string]interface{})
 	self["cache"] = v.cacheMetric.ExportType()

@@ -51,14 +51,21 @@ func TwoLayerShardedCmd() *cobra.Command {
 			}
 
 			jsonFlag := root.Flag("json")
-			json := jsonFlag.Value.String() == "true"
+			isJson := jsonFlag.Value.String() == "true"
+
+			interval, err := root.Flags().GetInt("step-interval")
+			if err != nil {
+				return err
+			}
 
 			return simulation.Run(
 				frontProxies,
 				args,
 				nil,
 				providerFlag.Value.String(),
-				twoLayerSharded.PrintResultsCB(json),
+				twoLayerSharded.PrintResultsCB(isJson),
+				interval,
+				twoLayerSharded.Step,
 			)
 		},
 	}
@@ -89,8 +96,8 @@ func OneLayerCmd() *cobra.Command {
 
 			oneLayer := cases.NewOneLayer(
 				cases.LayerConfig{
-					amount,
-					cacheSize,
+					Amount:    amount,
+					CacheSize: cacheSize,
 				},
 			)
 
@@ -105,14 +112,21 @@ func OneLayerCmd() *cobra.Command {
 			}
 
 			jsonFlag := root.Flag("json")
-			json := jsonFlag.Value.String() == "true"
+			isJson := jsonFlag.Value.String() == "true"
+
+			interval, err := root.Flags().GetInt("step-interval")
+			if err != nil {
+				return err
+			}
 
 			return simulation.Run(
 				frontProxies,
 				args,
 				nil,
 				providerFlag.Value.String(),
-				oneLayer.PrintResultsCB(json),
+				oneLayer.PrintResultsCB(isJson),
+				interval,
+				oneLayer.Step,
 			)
 		},
 	}

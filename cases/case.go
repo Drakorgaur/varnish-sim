@@ -2,6 +2,7 @@ package cases
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"varnish_sim/model"
 )
@@ -13,6 +14,8 @@ type Case interface {
 
 	// Validate checks if the case is valid
 	Validate() error
+
+	Step() error
 
 	PrintResultsCB(bool) func() error
 }
@@ -49,4 +52,19 @@ func store(c CaseConfig) error {
 	}
 
 	return nil
+}
+
+type StepConfig struct {
+	StepInterval int `json:"step_interval"`
+}
+
+func WriteStep(v *model.VarnishProxy) error {
+	f, err := os.OpenFile(fmt.Sprintf("steps/%s.step", v.Hostname()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(v.Step() + "\n")
+	return err
 }

@@ -66,7 +66,8 @@ func fillVarnishProxies(
 
 // TwoLayerSharded is a case for a two-layer sharded Varnish setup
 // first layer has a director that shards requests to the second layer
-//  has a backend that serves requests
+//
+//	has a backend that serves requests
 type TwoLayerSharded struct {
 	// default backend that serves `all` requests
 	backend *model.Backend
@@ -143,6 +144,19 @@ func (t *TwoLayerSharded) SetUp() ([]*model.VarnishProxy, error) {
 	// return all Varnish proxies that are placed in front.
 	// requests will be made to these proxies
 	return t.firstL, nil
+}
+
+func (t *TwoLayerSharded) Step() error {
+	var err error
+	for _, varnish := range t.firstL {
+		err = WriteStep(varnish)
+	}
+
+	for _, varnish := range t.secondL {
+		err = WriteStep(varnish)
+	}
+
+	return err
 }
 
 // PrintResultsCB returns a callback for printing results

@@ -23,6 +23,8 @@ func setUpRoot() {
 		providerFlagUsage += p + " "
 	}
 
+	// step-interval
+	root.PersistentFlags().IntP("step-interval", "", 100, "interval between steps in req count")
 	root.PersistentFlags().StringP("provider", "p", "", providerFlagUsage)
 	root.PersistentFlags().BoolP("json", "", false, "print json output")
 	// not implemented yet
