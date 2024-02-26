@@ -16,18 +16,28 @@ type WebInterface interface {
 // create a new representation and implement a WebInterface.
 type Backend struct {
 	Hostname string
+	requests int
 }
 
 // Get interface WebInterface for Backend
 // we do not need to use url, as no logic is implemented
 func (b *Backend) Get(_ string, size int) int {
-	// TODO: make more complex
+	b.requests++
 	return size
 }
 
 // String returns the name of the web interface
 func (b *Backend) String() string {
 	return b.Hostname
+}
+
+func (b *Backend) Export() map[string]interface{} {
+	return map[string]interface{}{
+		"backend": map[string]interface{}{
+			"hostname": b.Hostname,
+			"requests": b.requests,
+		},
+	}
 }
 
 // VarnishProxy is a representation of a Varnish proxy
