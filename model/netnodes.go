@@ -175,7 +175,7 @@ func (v *VarnishProxy) Get(req string, size int) int {
 		artifactSize := v.backend.Get(req, size)
 
 		// cache the result
-		v.cache.cache.Add(req, artifactSize)
+		v.cache.Store(req, artifactSize)
 
 		return artifactSize
 	}
