@@ -28,6 +28,11 @@ func (s *CacheStorage[K, V]) Store(k K, v V) {
 	// check if size of cache allows to store a new artifact
 	size := s.cache.Len()
 
+	if v > s.size {
+		// if the object is bigger than the cache size, we cannot store it
+		return
+	}
+
 	if s.stored+v <= s.size {
 		// if we can store, resize cache to store more keys.
 		s.cache.Resize(size + 1)
