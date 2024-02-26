@@ -192,6 +192,9 @@ func (t *TwoLayerSharded) PrintResultsJSON() error {
 		proxies = append(proxies, varnish.Export())
 	}
 
+	// add default backend to the list
+	proxies = append(proxies, t.backend.Export())
+
 	raw, err := json.MarshalIndent(proxies, "", " ")
 	if err != nil {
 		return err

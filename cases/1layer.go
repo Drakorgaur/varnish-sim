@@ -63,6 +63,11 @@ func (o *OneLayer) PrintResultsCB(isJson bool) func() error {
 				}
 				fmt.Println(string(raw))
 			}
+			raw, err := json.Marshal(o.backend.Export())
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(raw))
 			return nil
 		}
 	}

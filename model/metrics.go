@@ -31,7 +31,7 @@ func (m *CacheMetric) StepHeader() string {
 }
 
 func (m *CacheMetric) Step() string {
-	return fmt.Sprintf("%d %d", m.hit, m.miss)
+	return fmt.Sprintf("%f", m.CHR())
 }
 
 func (m *CacheMetric) Total() int {

@@ -59,13 +59,13 @@ type Provider interface {
 // that will be passed for simulation
 // Note: cuts the last character of the line, which is assumed to be a newline character
 func defaultFormatter(line string) (string, int) {
-	urlPos := 0
+	urlPos := 1
 	urlPosEnv := os.Getenv(VsimFrmtUrlPosEnvName)
 	if urlPosEnv != "" {
 		urlPos, _ = strconv.Atoi(urlPosEnv)
 	}
 
-	sizePos := 1
+	sizePos := 0
 	sizePosEnv := os.Getenv(VsimFrmtSizePosEnvName)
 	if sizePosEnv != "" {
 		if v, err := strconv.Atoi(sizePosEnv); err == nil {

@@ -15,6 +15,7 @@ func init() {
 func fillCasesCmd() {
 	root.AddCommand(TwoLayerShardedCmd())
 	root.AddCommand(OneLayerCmd())
+	root.AddCommand(TwoLayerCmd())
 }
 
 // TwoLayerShardedCmd returns a command for the two-layer sharded case
@@ -133,6 +134,66 @@ func OneLayerCmd() *cobra.Command {
 
 	cmd.Flags().IntVarP(&amount, "amount", "a", 0, "Amount of Varnish proxies")
 	cmd.Flags().IntVarP(&cacheSize, "cache-size", "c", 0, "Cache size of Varnish proxies")
+
+	return cmd
+}
+
+func TwoLayerCmd() *cobra.Command {
+	firstAmount := 0
+	firstCacheSize := 0
+	secondAmount := 0
+	secondCacheSize := 0
+
+	cmd := &cobra.Command{
+		Use:     "2layer",
+		Aliases: []string{"2l"},
+		Short:   "Two-layer non-sharded case",
+		Long:    "Simulation case with two-layer non-sharded Varnish proxies",
+		Args:    cobra.MinimumNArgs(MinArgCount),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			providerFlag := root.Flag("provider")
+			if providerFlag == nil {
+				return fmt.Errorf("provider flag is not set")
+			}
+
+			twoLayer := cases.NewTwoLayer(
+				*cases.NewTwoLayerShardedConfig(firstAmount, firstCacheSize, secondAmount, secondCacheSize),
+			)
+
+			err := twoLayer.Validate()
+			if err != nil {
+				return err
+			}
+
+			frontProxies, err := twoLayer.SetUp()
+			if err != nil {
+				return err
+			}
+
+			jsonFlag := root.Flag("json")
+			isJson := jsonFlag.Value.String() == "true"
+
+			interval, err := root.Flags().GetInt("step-interval")
+			if err != nil {
+				return err
+			}
+
+			return simulation.Run(
+				frontProxies,
+				args,
+				nil,
+				providerFlag.Value.String(),
+				twoLayer.PrintResultsCB(isJson),
+				interval,
+				twoLayer.Step,
+			)
+		},
+	}
+
+	cmd.Flags().IntVarP(&firstAmount, "first-amount", "f", 0, "Amount of Varnish proxies in the first layer")
+	cmd.Flags().IntVarP(&firstCacheSize, "first-cache-size", "F", 0, "Cache size of Varnish proxies in the first layer")
+	cmd.Flags().IntVarP(&secondAmount, "second-amount", "s", 0, "Amount of Varnish proxies in the second layer")
+	cmd.Flags().IntVarP(&secondCacheSize, "second-cache-size", "S", 0, "Cache size of Varnish proxies in the second layer")
 
 	return cmd
 }
