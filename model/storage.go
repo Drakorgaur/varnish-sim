@@ -4,7 +4,7 @@ import lru "github.com/hashicorp/golang-lru/v2"
 
 type Storage[C comparable, V Numeric] interface { // TODO: any other name?
 	Size() V
-	Store(C, V)
+	Store(C, V) bool
 	Get(C) (V, bool)
 }
 
@@ -24,19 +24,26 @@ func (s *CacheStorage[K, V]) Stored() V {
 	return s.stored
 }
 
-func (s *CacheStorage[K, V]) Store(k K, v V) {
+// Store stores a value in the cache
+// if the value is bigger than the cache size, it returns false
+// if the value can be stored, it returns if object was nuked.
+func (s *CacheStorage[K, V]) Store(k K, v V) bool {
 	// check if size of cache allows to store a new artifact
 	size := s.cache.Len()
 
 	if v > s.size {
 		// if the object is bigger than the cache size, we cannot store it
-		return
+		return false
 	}
 
+	nuked := false
 	if s.stored+v <= s.size {
 		// if we can store, resize cache to store more keys.
 		s.cache.Resize(size + 1)
 	} else {
+		// we have to remove some objects from cache to store the new one
+		nuked = true
+
 		// we remove the oldest object from cache
 		// and keep the size of cache the same
 		for {
@@ -67,6 +74,8 @@ func (s *CacheStorage[K, V]) Store(k K, v V) {
 
 	s.stored += v
 	s.cache.Add(k, v)
+
+	return nuked
 }
 
 func (s *CacheStorage[K, V]) Get(k K) (V, bool) {

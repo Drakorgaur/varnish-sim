@@ -51,6 +51,9 @@ type VarnishProxy struct {
 	// metrics
 	cacheMetric   CacheMetric
 	routingMetric RoutingMetric[int]
+
+	// warmuped is a flag to indicate that the VarnishProxy has been warmed up
+	warmuped bool
 }
 
 func (v *VarnishProxy) TableData() (name string, rows [][]string) {
@@ -161,11 +164,15 @@ func (v *VarnishProxy) Get(req string, size int) int {
 	// try to get from Cache
 	obj, ok := v.cache.Get(req)
 	if ok {
-		v.cacheMetric.Hit()
+		if v.warmuped {
+			v.cacheMetric.Hit()
+		}
 
 		return obj
 	} else {
-		v.cacheMetric.Miss()
+		if v.warmuped {
+			v.cacheMetric.Miss()
+		}
 	}
 
 	if v.director != nil {
@@ -176,7 +183,10 @@ func (v *VarnishProxy) Get(req string, size int) int {
 		artifactSize := backend.Get(req, size)
 
 		// cache the result
-		v.cache.Store(req, artifactSize)
+		isNuked := v.cache.Store(req, artifactSize)
+		if isNuked {
+			v.warmuped = true
+		}
 
 		return artifactSize
 	}
@@ -185,7 +195,10 @@ func (v *VarnishProxy) Get(req string, size int) int {
 		artifactSize := v.backend.Get(req, size)
 
 		// cache the result
-		v.cache.Store(req, artifactSize)
+		isNuked := v.cache.Store(req, artifactSize)
+		if isNuked {
+			v.warmuped = true
+		}
 
 		return artifactSize
 	}
