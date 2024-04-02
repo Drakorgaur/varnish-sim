@@ -16,6 +16,7 @@ func fillCasesCmd() {
 	root.AddCommand(TwoLayerShardedCmd())
 	root.AddCommand(OneLayerCmd())
 	root.AddCommand(TwoLayerCmd())
+	root.AddCommand(OneLayerShardedCmd())
 }
 
 // TwoLayerShardedCmd returns a command for the two-layer sharded case
@@ -128,6 +129,65 @@ func OneLayerCmd() *cobra.Command {
 				oneLayer.PrintResultsCB(isJson),
 				interval,
 				oneLayer.Step,
+			)
+		},
+	}
+
+	cmd.Flags().IntVarP(&amount, "amount", "a", 0, "Amount of Varnish proxies")
+	cmd.Flags().IntVarP(&cacheSize, "cache-size", "c", 0, "Cache size of Varnish proxies")
+
+	return cmd
+}
+
+func OneLayerShardedCmd() *cobra.Command {
+	amount := 0
+	cacheSize := 0
+
+	cmd := &cobra.Command{
+		Use:     "1layer-sharded",
+		Aliases: []string{"1ls"},
+		Short:   "One-layer sharded case",
+		Long:    "Simulation case with one-layer sharded Varnish proxies",
+		Args:    cobra.MinimumNArgs(MinArgCount),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			providerFlag := root.Flag("provider")
+			if providerFlag == nil {
+				return fmt.Errorf("provider flag is not set")
+			}
+
+			oneLayerSharded := cases.NewOneLayerSharded(
+				cases.LayerConfig{
+					Amount:    amount,
+					CacheSize: cacheSize,
+				},
+			)
+
+			err := oneLayerSharded.Validate()
+			if err != nil {
+				return err
+			}
+
+			frontProxies, err := oneLayerSharded.SetUp()
+			if err != nil {
+				return err
+			}
+
+			jsonFlag := root.Flag("json")
+			isJson := jsonFlag.Value.String() == "true"
+
+			interval, err := root.Flags().GetInt("step-interval")
+			if err != nil {
+				return err
+			}
+
+			return simulation.Run(
+				frontProxies,
+				args,
+				nil,
+				providerFlag.Value.String(),
+				oneLayerSharded.PrintResultsCB(isJson),
+				interval,
+				oneLayerSharded.Step,
 			)
 		},
 	}

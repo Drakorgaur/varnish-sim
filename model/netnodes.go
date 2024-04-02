@@ -175,9 +175,22 @@ func (v *VarnishProxy) Get(req string, size int) int {
 		}
 	}
 
+	// if got a cache miss, we have to get the object from the backend
+	// and store it in the cache
+	// if the VarnishProxy has a director, we get the backend from the director
+	// analogue to `director.backend(req)`
 	if v.director != nil {
 		// director based on its internal logic selects a backend
 		backend := v.director.GetBackend(req)
+
+		// if director returning this instance, we may have a case
+		// when we have a shard director and hash-ring tells us that we are
+		// the backend that is responsible for this request
+		if backend == v {
+			// set original backend, as we can not send request to ourselves
+			backend = v.backend
+		}
+
 		v.routingMetric[backend]++
 
 		artifactSize := backend.Get(req, size)
